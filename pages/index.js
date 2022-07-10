@@ -15,10 +15,13 @@ import {
   IconButton,
   useToast,
 } from "@chakra-ui/react";
+import { SearchIcon, CloseIcon } from "@chakra-ui/icons";
 
 export default function Home(results) {
   const initialState = results;
   const [characters, setCharacters] = useState(initialState.characters);
+  const [search, setSearch] = useState("");
+  const toast = useToast();
   return (
     <>
       <Head>
@@ -37,6 +40,54 @@ export default function Home(results) {
           <Heading as="h1" size="2xl" mb={8}>
             Rick and Morty
           </Heading>
+          <form
+            onSubmit={async (event) => {
+              event.preventDefault();
+              const results = await fetch("/api/SearchCharacters", {
+                method: "post",
+                body: search,
+              });
+              const { characters, error } = await results.json();
+              if (error) {
+                toast({
+                  position: "bottom",
+                  title: "An error has occured",
+                  description: error,
+                  status: "error",
+                  duration: 5000,
+                  isClosable: true,
+                });
+              } else {
+                setCharacters(characters);
+              }
+            }}
+          >
+            <Stack maxWidth="350px" width="100%" isInline mb={8}>
+              <Input
+                placeHolder="Search"
+                value={search}
+                border="none"
+                onChange={(e) => setSearch(e.target.value)}
+              />
+              <IconButton
+                colorScheme="blue"
+                aria-label="Search database"
+                icon={<SearchIcon />}
+                disabled={search === ""}
+                type="submit"
+              />
+              <IconButton
+                colorScheme="red"
+                aria-label="Reset button"
+                icon={<CloseIcon />}
+                disabled={search === ""}
+                onClick={async () => {
+                  setSearch("");
+                  setCharacters(initialState.characters);
+                }}
+              />
+            </Stack>
+          </form>
           <Characters characters={characters} />
         </Box>
       </Flex>
